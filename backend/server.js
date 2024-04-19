@@ -47,6 +47,7 @@ var spam = [];
 var useramount = 0;
 var chatspeed = 1000;
 //websocket
+
 io.on('connection', async (socket) => {
   const token = socket.handshake.auth.token;
 
@@ -59,6 +60,7 @@ io.on('connection', async (socket) => {
       message: `Your token is expired please relog`,
       timestamp: new Date()
     });
+    return;
   };
   const user = await User.findById(decode.userId);
   useramount++;
@@ -153,7 +155,7 @@ io.on('connection', async (socket) => {
               helpMessage += ", you can also make admins";
             }
           }
-          io.emit('chat message', {
+          io.to(socket.id).emit('chat message', {
             user: 'Server',
             message: helpMessage,
             timestamp: new Date()

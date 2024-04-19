@@ -1,28 +1,59 @@
-// App.js
+import { io } from 'socket.io-client';
+import axios from "axios";
 import Footer from "./footer"
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react'; // Import useRef
 import Chat from './Chat';
 import Login from './Logins';
 import Register from './Register';
-import { BrowserRouter as Router, Routes, Route, Link, redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import "./Topbar.css"
+import "./ChatGameLayout.css"; // Import the CSS file
+import "./App.css"
 function App() {
+  const [socket, setSocket] = useState(null);
   const [loggedIn, setLoggedIn] = useState(false);
+
+  const peer = useRef(); // Ref for simple-peer
 
   const handleLogin = () => {
     setLoggedIn(true);
-    redirect("/")
+    window.location.href = "/";
   };
 
   const handleLogout = () => {
     setLoggedIn(false);
     localStorage.removeItem('token');
   };
-  useEffect(()=>{
-  if (localStorage.getItem("token")){
-    setLoggedIn(true);
-  }
-  })
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      setLoggedIn(true);
+    }
+  }, []);
+
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+    if (!token) {
+      return;
+    }
+
+    const newSocket = io('https://api.tyhjyys.fun/', {
+      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      auth: {
+        token: token,
+      },
+    });
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.close();
+    };
+  }, [token]);
+
+
+
   return (
     <div className="App">
       <Router>
@@ -49,17 +80,21 @@ function App() {
           </ul>
         </nav>
 
-        <Routes>
-          <Route
-            exact
-            path="/"
-            element={loggedIn ? <Chat /> : <Login onLogin={handleLogin} />}
-          />
-          <Route exact path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route exact path="/register" element={<Register />} />
-        </Routes>
+        <div className="ChatGameContainer">
+          
+            <Routes>
+              <Route
+                exact
+                path="/"
+                element={loggedIn ? <div><div className="ChatContainer"><Chat socket={socket} token={token} /></div></div> : <Login onLogin={handleLogin} />}
+              />
+              <Route exact path="/login" element={<Login token={token} socket={socket} onLogin={handleLogin} />} />
+              <Route exact path="/register" element={<Register />} />
+            </Routes>
+          <Footer />
+        </div>
       </Router>
-      <Footer />
+      
     </div>
   );
 }

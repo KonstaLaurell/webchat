@@ -3,7 +3,7 @@ import react from "react"
 
 function Footer(){
 
-    return<footer> <small>&copy; Copyright 2024, Tyhjyys.fun</small> </footer>
+    return<footer>&copy; Copyright 2024, Tyhjyys.fun </footer>
 }
 
 export default Footer;
